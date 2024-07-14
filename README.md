@@ -1,2 +1,2 @@
 # Handwritten-OCR
-Detect handwritten letters and digitd
+Detect handwritten letters and digits
