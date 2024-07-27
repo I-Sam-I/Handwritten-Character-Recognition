@@ -1,6 +1,6 @@
 data/
-model.keras
-model_accuracy_loss.png
+models/
+plots/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

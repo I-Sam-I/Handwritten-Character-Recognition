@@ -1,4 +1,4 @@
-from load_data import get_classes, load_training_data, load_testing_data, load_validation_data
+from load_data import get_classes, load_training_data, load_testing_data, load_validation_data, load_all_data
 
 import numpy as np
 from tensorflow.keras.utils import to_categorical
@@ -66,9 +66,7 @@ def preprocess_data():
 
     # Load all the data
     class_hex, class_labels = get_classes()
-    training_data, training_labels = load_training_data(class_hex, class_labels)
-    testing_data, testing_labels = load_testing_data(class_hex, class_labels)
-    validation_data, validation_labels = load_validation_data(class_hex, class_labels)
+    (training_data, training_labels), (testing_data, testing_labels), (validation_data, validation_labels) = load_all_data(class_hex, class_labels)
 
     # Preprocess the images
     training_data = preprocess_images(training_data)

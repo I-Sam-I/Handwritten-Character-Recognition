@@ -203,6 +203,29 @@ def load_validation_data(classes, labels, dir=MAIN_DIRECTORY):
     return np.array(validation_data), np.array(validation_labels)
 
 
+def load_all_data(classes, labels, dir=MAIN_DIRECTORY):
+    """
+    Retrieves all the data from the directory
+
+    Args:
+        classes (List): A list of the classes to load the data from
+        labels (List): A list of the labels to assign to the classes
+        dir (str, optional): The directory to load the data from
+
+    Raises:
+        FileNotFoundError: If the directory does not exist
+
+    Returns:
+        Tuple: A tuple containing the numpy arrays training data, testing data, and validation data
+    """
+    
+    training_data, training_labels = load_training_data(classes, labels, dir)
+    testing_data, testing_labels = load_testing_data(classes, labels, dir)
+    validation_data, validation_labels = load_validation_data(classes, labels, dir)
+    
+    return (training_data, training_labels), (testing_data, testing_labels), (validation_data, validation_labels)
+
+
 def get_hsf_directories(dir=MAIN_DIRECTORY):
     """
     Retrieves the hsf directories from the directory

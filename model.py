@@ -51,7 +51,7 @@ def main():
 
     # Save the model
     if input('\n\nDo you want to save the model? (y/n) ').strip().lower() == 'y':
-        model.save('model.keras')
+        model.save('models/model.keras')
      
 
 def plot_model(history, filename='model_accuracy_loss.png'):
@@ -76,8 +76,6 @@ def plot_model(history, filename='model_accuracy_loss.png'):
     plt.title('Model accuracy')
     plt.ylabel('Accuracy')
     plt.xlabel('Epoch')
-    plt.yticks([0, 0.2, 0.4, 0.6, 0.8, 1])
-    plt.xticks(range(0, 21, 5))
     plt.legend(['Train', 'Validation'], loc='upper left')
 
     # Plot training & validation loss values
@@ -87,11 +85,10 @@ def plot_model(history, filename='model_accuracy_loss.png'):
     plt.title('Model loss')
     plt.ylabel('Loss')
     plt.xlabel('Epoch')
-    plt.xticks(range(0, 21, 5))
     plt.legend(['Train', 'Validation'], loc='upper left')
     
     # save the plot
-    plt.savefig(filename)
+    plt.savefig(f'plots/{filename}')
 
 
 def create_model():    
