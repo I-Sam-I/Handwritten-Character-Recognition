@@ -8,6 +8,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, Flatten, Dense, Dropout, BatchNormalization, Activation
 from sklearn.model_selection import train_test_split
 
+
 def main():
     # Load all the data
     class_hex, class_labels = get_classes()
@@ -30,6 +31,22 @@ def main():
 
 
 def train_model(model, training_dict, testing_dict, validation_dict, epochs=20, plot=True):
+    """
+    Trains a given model using the provided training, testing, and validation data.
+
+    Args:
+        model (keras.Model): The model to be trained.
+        training_dict (dict): A dictionary containing the training data and labels.
+        testing_dict (dict): A dictionary containing the testing data and labels.
+        validation_dict (dict): A dictionary containing the validation data and labels.
+        epochs (int, optional): The number of epochs to train the model (default is 20).
+        plot (bool, optional): Whether to plot the model's accuracy and loss (default is True).
+
+    Returns:
+        None
+    """
+
+    # Print Model Summary
     print(model.summary())
 
     # Train Model
@@ -54,6 +71,17 @@ def train_model(model, training_dict, testing_dict, validation_dict, epochs=20, 
 
 
 def create_models():
+    """
+    Creates and returns multiple models for digit recognition, uppercase letter recognition, lowercase letter recognition, and classification.
+
+    Returns:
+        tuple: A tuple containing the following models:
+            - digit_model: A model for digit recognition.
+            - uppercase_model: A model for uppercase letter recognition.
+            - lowercase_model: A model for lowercase letter recognition.
+            - classifier_model: A model for classification.
+    """
+
     digit_model = create_basic_cnn(10)
     uppercase_model = create_basic_cnn(26)
     lowercase_model = create_basic_cnn(26)
@@ -68,6 +96,17 @@ def create_models():
 
 
 def create_basic_cnn(output_classes):
+    """
+    Create a basic convolutional neural network (CNN) model.
+
+    Args:
+        output_classes (int): The number of output classes.
+
+    Returns:
+        keras.models.Sequential: The compiled CNN model.
+
+    """
+
     model = Sequential([
         Input(shape=(32, 32, 1)),
 
@@ -96,6 +135,17 @@ def create_basic_cnn(output_classes):
 
 
 def create_advanced_cnn(output_classes):
+    """
+    Creates an advanced convolutional neural network (CNN) model for image classification.
+
+    Parameters:
+    - output_classes (int): The number of output classes for the classification task.
+
+    Returns:
+    - model (Sequential): The compiled CNN model.
+
+    """
+
     model = Sequential([
         Input(shape=(32, 32, 1)),
 
@@ -136,6 +186,20 @@ def create_advanced_cnn(output_classes):
 
 
 def create_multi_model_classifier(digit_model, uppercase_model, lowercase_model, classifier_model):
+    """
+    Creates a multi-model classifier function that classifies and predicts handwritten characters.
+
+    Parameters:
+    digit_model (model): The model for classifying digits.
+    uppercase_model (model): The model for classifying uppercase letters.
+    lowercase_model (model): The model for classifying lowercase letters.
+    classifier_model (model): The model for classifying the type of character.
+
+    Returns:
+    function: A function that takes an image as input and returns the predicted character.
+
+    """
+
     def classify_and_predict(image):
         # Preprocess the image
         image = preprocess_images(np.array([image]))
@@ -158,6 +222,19 @@ def create_multi_model_classifier(digit_model, uppercase_model, lowercase_model,
 
 
 def load_classifier_data():
+    """
+    Load and preprocess the classifier data.
+
+    Returns:
+        dict: A dictionary containing the preprocessed training, testing, and validation data and labels.
+            The dictionary has the following structure:
+            {
+                'training': {'data': training_data, 'labels': training_labels},
+                'testing': {'data': testing_data, 'labels': testing_labels},
+                'validation': {'data': validation_data, 'labels': validation_labels}
+            }
+    """
+    
     # Load a data set
     class_hex, class_labels = get_classes()
     data, labels = load_testing_data(class_hex, class_labels)
