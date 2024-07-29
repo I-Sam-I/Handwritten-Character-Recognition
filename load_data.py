@@ -5,9 +5,9 @@ import numpy as np
 # Set the main directory
 MAIN_DIRECTORY = 'data/by_class'
 
-NO_EACH_TRAIN_CLASS = 300
-NO_EACH_TEST_CLASS = 100
-NO_EACH_VALIDATION_CLASS = 10
+NO_EACH_TRAIN_CLASS = 1500
+NO_EACH_TEST_CLASS = 500
+NO_EACH_VALIDATION_CLASS = 100
 
 
 def main():

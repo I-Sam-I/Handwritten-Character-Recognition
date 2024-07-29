@@ -10,23 +10,23 @@ from sklearn.model_selection import train_test_split
 
 def main():
     # Load all the data
-    # class_hex, class_labels = get_classes()
-    # (training_data, training_labels), (testing_data, testing_labels), (validation_data, validation_labels) = load_all_data(class_hex, class_labels)
+    class_hex, class_labels = get_classes()
+    (training_data, training_labels), (testing_data, testing_labels), (validation_data, validation_labels) = load_all_data(class_hex, class_labels)
     classifier_dict = load_classifier_data()
 
     # Split and Preprocess the data
-    # training_dict = split_and_preprocess(training_data, training_labels)
-    # testing_dict = split_and_preprocess(testing_data, testing_labels)
-    # validation_dict = split_and_preprocess(validation_data, validation_labels)
+    training_dict = split_and_preprocess(training_data, training_labels)
+    testing_dict = split_and_preprocess(testing_data, testing_labels)
+    validation_dict = split_and_preprocess(validation_data, validation_labels)
 
     # Create the models
     digit_model, uppercase_model, lowercase_model, classifier_model = create_models()
 
     # Train the models
-    # train_model(digit_model, training_dict['digits'], testing_dict['digits'], validation_dict['digits'])
-    # train_model(uppercase_model, training_dict['uppercase'], testing_dict['uppercase'], validation_dict['uppercase'], epochs=50)
-    # train_model(lowercase_model, training_dict['lowercase'], testing_dict['lowercase'], validation_dict['lowercase'], epochs=50)
-    train_model(classifier_model, classifier_dict['training'], classifier_dict['testing'], classifier_dict['validation'], epochs=200)
+    train_model(digit_model, training_dict['digits'], testing_dict['digits'], validation_dict['digits'])
+    train_model(uppercase_model, training_dict['uppercase'], testing_dict['uppercase'], validation_dict['uppercase'], epochs=50)
+    train_model(lowercase_model, training_dict['lowercase'], testing_dict['lowercase'], validation_dict['lowercase'], epochs=50)
+    train_model(classifier_model, classifier_dict['training'], classifier_dict['testing'], classifier_dict['validation'], epochs=100)
 
 
 def train_model(model, training_dict, testing_dict, validation_dict, epochs=20, plot=True):
