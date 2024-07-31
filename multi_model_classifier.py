@@ -1,11 +1,13 @@
 from split_preprocess_data import split_and_preprocess
-from load_data import get_classes, load_all_data, load_testing_data
+from load_data import get_classes, load_all_data, load_training_data
 from preprocess_data import preprocess_images, preprocess_labels
 from model import plot_model
+from pickle import load
+from scipy.special import softmax
 
 import numpy as np
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, Flatten, Dense, Dropout, BatchNormalization, Activation
+from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, Flatten, Dense, Dropout, BatchNormalization
 from sklearn.model_selection import train_test_split
 
 
@@ -13,21 +15,24 @@ def main():
     # Load all the data
     class_hex, class_labels = get_classes()
     (training_data, training_labels), (testing_data, testing_labels), (validation_data, validation_labels) = load_all_data(class_hex, class_labels)
-    classifier_dict = load_classifier_data()
+    print('.')
+    classifier_dict = load_classifier_data(training_data, training_labels)
+    print('!')
 
     # Split and Preprocess the data
     training_dict = split_and_preprocess(training_data, training_labels)
     testing_dict = split_and_preprocess(testing_data, testing_labels)
     validation_dict = split_and_preprocess(validation_data, validation_labels)
+    print('?')
 
     # Create the models
     digit_model, uppercase_model, lowercase_model, classifier_model = create_models()
 
     # Train the models
-    train_model(digit_model, training_dict['digits'], testing_dict['digits'], validation_dict['digits'])
-    train_model(uppercase_model, training_dict['uppercase'], testing_dict['uppercase'], validation_dict['uppercase'], epochs=50)
-    train_model(lowercase_model, training_dict['lowercase'], testing_dict['lowercase'], validation_dict['lowercase'], epochs=50)
-    train_model(classifier_model, classifier_dict['training'], classifier_dict['testing'], classifier_dict['validation'], epochs=100)
+    train_model(digit_model, training_dict['digits'], testing_dict['digits'], validation_dict['digits'], epochs=50)
+    train_model(uppercase_model, training_dict['uppercase'], testing_dict['uppercase'], validation_dict['uppercase'], epochs=100)
+    train_model(lowercase_model, training_dict['lowercase'], testing_dict['lowercase'], validation_dict['lowercase'], epochs=100)
+    train_model(classifier_model, classifier_dict['training'], classifier_dict['testing'], classifier_dict['validation'], epochs=200)
 
 
 def train_model(model, training_dict, testing_dict, validation_dict, epochs=20, plot=True):
@@ -47,27 +52,27 @@ def train_model(model, training_dict, testing_dict, validation_dict, epochs=20, 
     """
 
     # Print Model Summary
+    model_name = model.name
     print(model.summary())
 
     # Train Model
     history = model.fit(
         training_dict['data'], training_dict['labels'], 
         epochs=epochs,
-        validation_data=(validation_dict['data'], validation_dict['labels']),
-        batch_size=32)
+        validation_data=(validation_dict['data'], validation_dict['labels']))
     
     # Plot Model
     if plot:
-        plot_model(history, f"{model.name}'s Accuracy and Loss")
+        plot_model(history, f"{model_name}'s Accuracy and Loss")
     
     # Evaluate Model
     print('\n\n\n')
     loss, accuracy = model.evaluate(testing_dict['data'], testing_dict['labels'])
-    print(f'{model.name}: Loss: {loss:.3f},\tAccuracy: {accuracy:.3f}')
+    print(f'{model_name}: Loss: {loss:.3f},\tAccuracy: {accuracy:.3f}')
 
     # Save Model
-    if input(f"Save Model ({model.name})? (y/n): ").strip().lower() == 'y':
-        model.save(f"models/{model.name}.keras")
+    if input(f"\nSave Model ({model_name})? (y/n): ").strip().lower().startswith('y'):
+        model.save(f"models/{model_name}.keras")
 
 
 def create_models():
@@ -82,16 +87,19 @@ def create_models():
             - classifier_model: A model for classification.
     """
 
-    digit_model = create_basic_cnn(10)
-    uppercase_model = create_basic_cnn(26)
-    lowercase_model = create_basic_cnn(26)
-    classifier_model = create_advanced_cnn(3)
+    # Create the models with the specified number of output classes
+    digit_model = create_basic_cnn(10)          # 10 digits (0-9)
+    uppercase_model = create_basic_cnn(26)      # 26 uppercase letters (A-Z)
+    lowercase_model = create_basic_cnn(26)      # 26 lowercase letters (a-z)
+    classifier_model = create_advanced_cnn(3)   # 3 classes (digits, uppercase, lowercase)
 
+    # Set the model names
     digit_model.name = 'Digit_Model'
     uppercase_model.name = 'Uppercase_Model'
     lowercase_model.name = 'Lowercase_Model'
     classifier_model.name = 'Classifier_Model'
 
+    # Return the models
     return digit_model, uppercase_model, lowercase_model, classifier_model
 
 
@@ -138,11 +146,11 @@ def create_advanced_cnn(output_classes):
     """
     Creates an advanced convolutional neural network (CNN) model for image classification.
 
-    Parameters:
-    - output_classes (int): The number of output classes for the classification task.
+    Args:
+        output_classes (int): The number of output classes for the classification task.
 
     Returns:
-    - model (Sequential): The compiled CNN model.
+        model (Sequential): The compiled CNN model.
 
     """
 
@@ -174,6 +182,7 @@ def create_advanced_cnn(output_classes):
 
         Dense(256, activation='relu'),
         Dropout(0.5),
+
         Dense(128, activation='relu'),
         Dropout(0.5),
 
@@ -189,21 +198,18 @@ def create_multi_model_classifier(digit_model, uppercase_model, lowercase_model,
     """
     Creates a multi-model classifier function that classifies and predicts handwritten characters.
 
-    Parameters:
-    digit_model (model): The model for classifying digits.
-    uppercase_model (model): The model for classifying uppercase letters.
-    lowercase_model (model): The model for classifying lowercase letters.
-    classifier_model (model): The model for classifying the type of character.
+    Args:
+        digit_model (model): The model for classifying digits.
+        uppercase_model (model): The model for classifying uppercase letters.
+        lowercase_model (model): The model for classifying lowercase letters.
+        classifier_model (model): The model for classifying the type of character.
 
     Returns:
-    function: A function that takes an image as input and returns the predicted character.
+        function: A function that takes an image as input and returns the predicted character.
 
     """
 
-    def classify_and_predict(image):
-        # Preprocess the image
-        image = preprocess_images(np.array([image]))
-        
+    def classify_and_predict(image):        
         # Classify the image
         class_prediction = classifier_model.predict(image)
         class_index = np.argmax(class_prediction)
@@ -221,7 +227,7 @@ def create_multi_model_classifier(digit_model, uppercase_model, lowercase_model,
     return classify_and_predict
 
 
-def load_classifier_data():
+def load_classifier_data(training_data, training_labels):
     """
     Load and preprocess the classifier data.
 
@@ -235,45 +241,108 @@ def load_classifier_data():
             }
     """
     
-    # Load a data set
-    class_hex, class_labels = get_classes()
-    data, labels = load_testing_data(class_hex, class_labels)
-    updated_labels = []
+    # Declare lists to store the data and labels
+    data = []
+    labels = []
 
-    for label in labels:
-        c = chr(label)
+    # Use training data to create the classifier data
+    for d, label in zip(training_data, training_labels):
+        c = chr(label)  # Convert the label to a character
         
-        if c.isdigit():
-            updated_labels.append(0)
+        data.append(d)  # Ensures the data and labels are in the same order
 
-        elif c.isupper():
-            updated_labels.append(1)
-
-        elif c.islower():
-            updated_labels.append(2)
-
-        else:
-            raise ValueError(f"Invalid character '{c}'")
+        if c.isdigit(): labels.append(0)
+        elif c.isupper(): labels.append(1)
+        elif c.islower(): labels.append(2)
+        else: raise ValueError(f"Invalid character '{c}'")
     
-    updated_labels = np.array(updated_labels)
+    # Convert to numpy arrays
+    data = np.array(data)
+    labels = np.array(labels)
 
-    training_data, testing_data, training_labels, testing_labels = train_test_split(data, updated_labels, test_size=0.2)
-    validation_data, testing_data, validation_labels, testing_labels = train_test_split(testing_data, testing_labels, test_size=0.9)
+    # Split the data into training and testing sets
+    training_data, testing_data, training_labels, testing_labels = train_test_split(data, labels, test_size=0.2)
 
-    # Preprocess data and labels
+    # Further split the testing data into validation and testing sets
+    testing_data, validation_data, testing_labels, validation_labels = train_test_split(testing_data, testing_labels, test_size=0.1)
+
+    # Preprocess data
     training_data = preprocess_images(training_data)
     testing_data = preprocess_images(testing_data)
     validation_data = preprocess_images(validation_data)
 
+    # Preprocess labels
     training_labels = preprocess_labels(training_labels)
     testing_labels = preprocess_labels(testing_labels)
     validation_labels = preprocess_labels(validation_labels)
 
+    # Return the data and labels as nested dictionaries
     return {
         'training': {'data': training_data, 'labels': training_labels},
         'testing': {'data': testing_data, 'labels': testing_labels},
         'validation': {'data': validation_data, 'labels': validation_labels}
     }
+
+
+#! This function is a testing function
+def test_predict(digit_model, uppercase_model, lowercase_model):
+    def predict(image):
+        """
+        Predicts the character in the given image using the provided models.
+
+        Args:
+            image (numpy.ndarray): The image to be classified.
+
+        Returns:
+            str: The predicted character.
+        """
+
+        # Predict the character
+        digit_prediction = digit_model.predict(image)
+        uppercase_prediction = uppercase_model.predict(image)
+        lowercase_prediction = lowercase_model.predict(image)
+
+        # Convert to probabilities
+        # digit_probabilities = softmax(digit_prediction, axis=1)
+        # uppercase_probabilities = softmax(uppercase_prediction, axis=1)
+        # lowercase_probabilities = softmax(lowercase_prediction, axis=1)
+
+        # Get the predictions
+        digit_class = np.argmax(digit_prediction)
+        uppercase_class = np.argmax(uppercase_prediction)
+        lowercase_class = np.argmax(lowercase_prediction)
+
+        # Get the probabilities
+        # digit_confidence = digit_probabilities[0][digit_class]
+        # uppercase_confidence = uppercase_probabilities[0][uppercase_class]
+        # lowercase_confidence = lowercase_probabilities[0][lowercase_class]
+
+        digit_confidence = digit_prediction[0][digit_class]
+        uppercase_confidence = uppercase_prediction[0][uppercase_class]
+        lowercase_confidence = lowercase_prediction[0][lowercase_class]
+
+        # Make it into a list
+        predictions = [
+            (digit_class, digit_confidence),
+            (uppercase_class, uppercase_confidence),
+            (lowercase_class, lowercase_confidence)
+        ]
+
+        print(predictions)
+        best_prediction = max(predictions, key=lambda x: x[1])
+        print(best_prediction) #! Debugging
+
+        # Load the label encoder
+        label_encoder = load(open('models/label_encoder.pkl', 'rb'))
+
+        # Get the best class as a character
+        best_class = best_prediction[0]
+        best_label = label_encoder.inverse_transform([best_class])[0]
+        best_character = chr(best_label)
+
+        return best_character
+
+    return predict
 
 
 if __name__ == '__main__':

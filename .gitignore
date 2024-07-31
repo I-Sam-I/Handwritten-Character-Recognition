@@ -1,6 +1,11 @@
 data/
 models/
 plots/
+images/
+
+# Debugging
+test.py
+letters/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

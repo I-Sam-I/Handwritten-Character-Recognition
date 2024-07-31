@@ -1,8 +1,6 @@
-
 from preprocess_data import preprocess_data
 
 import tensorflow as tf
-from tensorflow.keras.callbacks import ReduceLROnPlateau
 import matplotlib.pyplot as plt
 
 

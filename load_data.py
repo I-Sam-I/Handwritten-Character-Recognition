@@ -5,9 +5,9 @@ import numpy as np
 # Set the main directory
 MAIN_DIRECTORY = 'data/by_class'
 
-NO_EACH_TRAIN_CLASS = 1500
-NO_EACH_TEST_CLASS = 500
-NO_EACH_VALIDATION_CLASS = 100
+NO_EACH_TRAIN_CLASS = 2500
+NO_EACH_TEST_CLASS = NO_EACH_TRAIN_CLASS // 5 # 0.2
+NO_EACH_VALIDATION_CLASS = NO_EACH_TRAIN_CLASS // 10 # 0.1
 
 
 def main():
@@ -19,12 +19,6 @@ def main():
 
     # Get the testing data
     testing_data, testing_labels = load_testing_data(classes_hex, classes_labels)
-
-    # Convert lists to NumPy arrays
-    # training_data = np.array(training_data)
-    # training_labels = np.array(training_labels)
-    # testing_data = np.array(testing_data)
-    # testing_labels = np.array(testing_labels)
 
     # print(training_data.shape, training_labels.shape)
     # print(testing_data.shape, testing_labels.shape)
@@ -49,6 +43,7 @@ def get_classes(dir=MAIN_DIRECTORY):
     
     class_hex = []
     class_labels = []
+
     if os.path.exists(dir):
         classes = os.listdir(dir)
         class_hex = sorted(classes)
@@ -90,18 +85,20 @@ def load_training_data(classes, labels, dir=MAIN_DIRECTORY):
                 # Add the file path and label to the training data and labels
                 folder = os.listdir(train_dir)
                 np.random.shuffle(folder)
+
+                # Select a random batch of NO_EACH_TRAIN_CLASS files
                 for file in folder[:NO_EACH_TRAIN_CLASS]:
                     file_path = os.path.join(train_dir, file)
                     training_data.append(file_path)
                     training_labels.append(label)
             
             else:
-                raise FileNotFoundError(
-                    f"Directory '{train_dir}' does not exist")
+                raise FileNotFoundError(f"Directory '{train_dir}' does not exist")
     
     else:
         raise FileNotFoundError(f"Directory '{dir}' does not exist")
 
+    # Return as numpy arrays
     return np.array(training_data), np.array(training_labels)
 
 
